@@ -1,5 +1,6 @@
 package com.tiny.url.controller;
 
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,14 +18,22 @@ public class UrlController {
 	private UrlRepo repo;
 
 	@GetMapping("/tinyUrl")
-	public String tinyURL(@RequestParam String link) {
-
-//		String hash=UUID.randomUUID().toString();
-		String hash = "" + link.hashCode();
-		URL url = new URL();
-		url.setHash(hash);
-		url.setUrl(link);
-		repo.save(url);
+	public String tinyURL(@RequestParam String link){
+		int h;
+		int hk=(h =link.hashCode()) ^ (h >>> 16);
+		String hash =""+ hk;
+		URL old=repo.findByName(link);
+		Optional<URL> url = repo.findById(hash);
+		if (!url.isEmpty()) {
+			if(!url.get().getUrl().equals(link)&&old==null)
+				hash=UUID.randomUUID().toString();
+			else
+				return old.getHash();
+			}
+		URL uri = new URL();
+		uri.setHash(hash);
+		uri.setUrl(link);
+		repo.save(uri);
 		return hash;
 	}
 
